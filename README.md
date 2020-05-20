@@ -26,7 +26,7 @@ pip install tensorflow-gpu==1.13.2 scikit-learn Pillow h5py sobol sobol_seq pyrr
     ```
     ./PrepareData.sh
     ```  
-* Note: it is recommended that "PrepareData.sh" is executed on a terminal launched on a window manager since it uses OpenGL for multiview rendering of 3D shapes. Running the code via SSH connection without X forwarding would abort with an error "Exception: cannot open display".
+    * Note: it is recommended that "PrepareData.sh" is executed on a terminal launched on a window manager since it uses OpenGL for multiview rendering of 3D shapes. Running the code via SSH connection without X forwarding would abort with an error "Exception: cannot open display".
 
 ## Training SAT and evaluating learned 3D shape features
 1. The following command starts training of SAT and computes retrieval accuracy in MAP at every 5 epochs.
