@@ -14,7 +14,7 @@ The instruction below describes how to prepare data and how to train/evaluate SA
 
 ## Pre-requisites
 Our code has been tested with Python 3.6, Tensorflow 1.13 and CUDA 10.0 on Ubuntu 18.04.<br>
-Python packages required to run the code can be installed by using the command below. <br>
+Python packages required to run the code can be installed by executing the command below. <br>
 ```
 pip install tensorflow-gpu==1.13.2 scikit-learn Pillow h5py sobol sobol_seq pyrr moderngl
 ```
@@ -22,7 +22,7 @@ pip install tensorflow-gpu==1.13.2 scikit-learn Pillow h5py sobol sobol_seq pyrr
 ## Preparing Data
 1. Download ModelNet10.zip from [the project webpage of ModelNet](https://modelnet.cs.princeton.edu/) and unzip the downloaded file.
 
-2. Convert 3D shapes in OFF format to "shaperep" files that contain 3D shapes represented as voxels, 3D point sets, multiview images.
+2. Convert 3D shapes in OFF format to "shaperep" files that contain 3D shapes represented as voxels, 3D point sets, multiview images. The following command creates the files in the data directory.
 ```
 ./PrepareData.sh
 ```
