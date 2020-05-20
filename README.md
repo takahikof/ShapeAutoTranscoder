@@ -7,7 +7,7 @@ Takahiko Furuya and Ryutarou Ohbuchi<br>
 (currently under review)<br>
 
 SAT learns 3D shape feature via cross-predicting, or transcoding, multiple different 3D shape representations such as voxels, 3D point set, and multi-view 2D images. The embedded features in the latent space shared by the multiple 3D shape representations are used for 3D shape retrieval or 3D shape classification.
-![pic](SAT.png)<br>
+![pic](SAT.PNG)<br>
 The instruction below describes how to prepare data and how to train/evaluate SAT using ModelNet10 dataset.
 
 ## Data
