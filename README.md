@@ -2,9 +2,9 @@
 ## Introduction
 This repository provides the code of ShapeAutoTranscoder (SAT) for unsupervised learning of 3D shape feature proposed in the following paper.<br>
 ```
-Takahiko Furuya and Ryutarou Ohbuchi
-"Transcoding across 3D Shape Representations for Unsupervised Learning of 3D Shape Feature"
-(currently under review)
+Takahiko Furuya and Ryutarou Ohbuchi,
+"Transcoding across 3D Shape Representations for Unsupervised Learning of 3D Shape Feature",
+Pattern Recognition Letters, 2020. DOI: https://doi.org/10.1016/j.patrec.2020.07.012)
 ```
 
 SAT learns 3D shape feature via cross-predicting, or transcoding, multiple different 3D shape representations such as voxels, 3D point set, and multi-view 2D images. The embedded features in the latent space shared by the multiple 3D shape representations are used for 3D shape retrieval or 3D shape classification.
