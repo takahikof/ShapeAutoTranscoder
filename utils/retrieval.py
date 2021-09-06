@@ -8,70 +8,59 @@ import os
 
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import label_ranking_average_precision_score
-sys.path.append( 'utils' );
-import common_util as cu
+from scipy.sparse import csr_matrix
+from scipy.stats import rankdata
 
+def retrieval( embedding, label, calc_rpcurve=True ) :
 
-def parse_label_file( list_file, label_file ) :
-    modellist = cu.readList( list_file );
-    ctg2id = cu.generateCategory2ID( label_file );
-    label = cu.generateLabelVec( modellist, label_file, ctg2id );
-    n_class = len( ctg2id );
-    return label, n_class;
+    recall_step = 0.05;
 
-def retrieval( feat, list_file, label_file, metric ) :
+    mean_average_precision = 0.0;
+    mean_recall = np.zeros( int( 1.0 / recall_step ) );
+    mean_precision = np.zeros( int( 1.0 / recall_step ) );
 
-    label, n_class = parse_label_file( list_file, label_file );
+    n_data = embedding.shape[0];
 
-    n_model = feat.shape[ 0 ];
+    D = pairwise_distances( embedding, metric="cosine" );
 
-    if( metric == "L2" ) :
-        metric = "euclidean";
-        D = pairwise_distances( feat, metric=metric );
-    elif( metric == "L1" ) :
-        metric = "cityblock";
-        D = pairwise_distances( feat, metric=metric );
-    elif( metric == "COS" ) :
-        metric = "cosine";
-        D = pairwise_distances( feat, metric=metric );
+    for i in range( n_data ) : # for each query
+
+        dist_vec = D[ i ];
+        gt_vec = np.asarray( label==label[i], dtype=np.int32 ); # 1 if the retrieval target belongs to the same category with the query, 0 otherwise
+
+        dist_vec_woq = np.delete( dist_vec, i ); # distance vector without query
+        gt_vec_woq = np.delete( gt_vec, i );     # groundtruth vector without query
+        gt_vec_woq_sp = csr_matrix( gt_vec_woq );   # convert to sparse matrix
+
+        relevant = gt_vec_woq_sp.indices;
+        n_correct = gt_vec_woq_sp.nnz; # number of correct targets for the query
+        rank = rankdata( dist_vec_woq, 'max')[ relevant ]; # positions where correct data appear in a retrieval ranking
+        rank_sorted = np.sort( rank );
+
+        # average precision
+        if( n_correct == 0 ) :
+            ap = 1.0;
+        else :
+            L = rankdata( dist_vec_woq[relevant], 'max');
+            ap = (L / rank).mean();
+        mean_average_precision += ap;
+
+        # recall-precision curve
+        if( calc_rpcurve ) :
+            one_to_n = ( np.arange( n_correct ) + 1 ).astype( np.float32 );
+            precision = one_to_n / rank_sorted;
+            recall = one_to_n / n_correct;
+            recall_interp = np.arange( recall_step, 1.01, recall_step );
+            precision_interp = np.interp( recall_interp, recall, precision );
+            mean_recall = recall_interp; # no need to average
+            mean_precision += precision_interp;
+
+    mean_average_precision /= n_data;
+
+    if( calc_rpcurve ) :
+        mean_precision /= n_data;
     else :
-        print( "error: invalid metric: " + metric );
+        mean_recall = None;
+        mean_precision = None;
 
-    S = -1.0 * D; # convert to similarity
-    J = create_groundtruth_matrix( label );
-
-    # 検索0件目を除外するために対角成分を除去
-    S = remove_diag_elements( S );
-    J = remove_diag_elements( J );
-
-    # NN
-    idx = np.argmax( S, axis=1 );
-    idx = idx + np.arange( 0, n_model * ( n_model - 1 ), ( n_model - 1 ) );
-    J_top1 = np.take( J, idx );
-    nn = np.mean( J_top1 );
-
-    # MAP
-    map = label_ranking_average_precision_score( J, S );
-
-    return( nn, map );
-
-
-def remove_diag_elements( A ) :
-    # 正方行列Aの対角成分を削除 (サイズ NxN が Nx(N-1)になる)
-    # https://stackoverflow.com/questions/46736258/deleting-diagonal-elements-of-a-numpy-array
-    return A[~np.eye(A.shape[0],dtype=bool)].reshape(A.shape[0],-1)
-
-
-def create_groundtruth_matrix( label ) :
-    # ラベルベクトルから正解行列を作成．
-    # ラベルベクトルlabelのi番目の要素は，データiのカテゴリ番号．
-    # 正解行列Mの(i,j)の要素は，データiとデータjが同じカテゴリである場合1, そうでなければ0．
-    # https://stackoverflow.com/questions/48157476/efficiently-compute-pairwise-equal-for-numpy-arrays
-    l = np.reshape( label, ( -1, 1 ) );
-    a = np.ascontiguousarray( l );
-    b = np.ascontiguousarray( l );
-    void_dt = np.dtype((np.void, a.dtype.itemsize * a.shape[1]));
-    x1D = a.view(void_dt).ravel();
-    y1D = b.view(void_dt).ravel();
-    M = (x1D[:,None] == y1D).astype(np.int32);
-    return M;
+    return( mean_average_precision, ( mean_recall, mean_precision ) );
